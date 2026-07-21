@@ -1224,7 +1224,50 @@ function createBot() {
     });
 
     bot.loadPlugin(pathfinder);
+const { GoalNear } = require('mineflayer-pathfinder').goals;
 
+bot.on('time', async () => {
+  try {
+    // রাত হলে
+    if (bot.time.timeOfDay >= 12541 && bot.time.timeOfDay <= 23458) {
+
+      if (bot.isSleeping) return;
+
+      const bed = bot.findBlock({
+        matching: (block) =>
+          block.name.includes('bed') &&
+          block.getProperties()?.part === 'head',
+        maxDistance: 32
+      });
+
+      if (!bed) {
+        console.log("❌ No bed found!");
+        return;
+      }
+
+      console.log("🛏️ Going to bed...");
+
+      await bot.pathfinder.goto(
+        new GoalNear(
+          bed.position.x,
+          bed.position.y,
+          bed.position.z,
+          1
+        )
+      );
+
+      await bot.sleep(bed);
+
+      console.log("😴 Sleeping...");
+    }
+  } catch (err) {
+    console.log("Sleep Error:", err.message);
+  }
+});
+
+bot.on('wake', () => {
+  console.log("🌞 Woke up!");
+});
     // FIX: connection timeout - end the old bot before reconnecting to avoid ghost bots
     clearBotTimeouts();
     connectionTimeoutId = setTimeout(() => {
